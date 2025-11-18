@@ -12,7 +12,7 @@ def main(page: ft.Page):
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     
     # Version info (should match your GitHub release tag)
-    current_version = "1.0.6"
+    current_version = "1.1.0"
     
     def check_for_updates(e):
         try:
