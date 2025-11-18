@@ -7,7 +7,7 @@ import subprocess
 from pathlib import Path
 
 def main(page: ft.Page):
-    page.title = "Self-Updating Flet App"
+    page.title = "Self-Updating Flet Application"
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     
@@ -80,15 +80,15 @@ def main(page: ft.Page):
     update_button = ft.ElevatedButton(
         text="Check for Updates",
         on_click=check_for_updates,
-        bgcolor=ft.colors.BLUE_400,
-        color=ft.colors.WHITE
+        bgcolor=ft.Colors.BLUE_400,
+        color=ft.Colors.WHITE
     )
     
     page.add(
         ft.Column([
-            ft.Icon(ft.icons.UPDATE, size=50),
+            ft.Icon(ft.Icons.UPDATE, size=50),
             version_text,
-            ft.Text("This app can update itself from GitHub!", size=16),
+            ft.Text("This app can update itself from GitHub and anywhere", size=16),
             update_button
         ], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER)
     )
