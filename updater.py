@@ -1,10 +1,9 @@
-import os
 import requests
-import zipfile
-import shutil
-import subprocess
+import os
 import sys
-from pathlib import Path
+import tempfile
+import subprocess
+import time
 
 def main():
     print("Starting update process...")
@@ -13,63 +12,68 @@ def main():
     repo_name = "flet_test_app"
     
     try:
-        # Get latest release download URL
+        # Get latest release info
         api_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/releases/latest"
         response = requests.get(api_url)
         
         if response.status_code == 200:
             release_data = response.json()
             
-            # Look for source code zipball
-            zip_url = release_data['zipball_url']
+            # Find the EXE download URL
+            download_url = None
+            for asset in release_data.get('assets', []):
+                if asset['name'].endswith('.exe'):
+                    download_url = asset['browser_download_url']
+                    break
             
-            # Download the source code
-            print("Downloading update...")
-            zip_response = requests.get(zip_url)
-            
-            if zip_response.status_code == 200:
-                # Save zip file
-                zip_path = "update.zip"
-                with open(zip_path, "wb") as f:
-                    f.write(zip_response.content)
+            if download_url:
+                print("Downloading new version...")
                 
-                # Extract and update files
-                print("Extracting update...")
-                with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                    zip_ref.extractall("temp_update")
-                
-                # Find the extracted folder
-                extract_dir = Path("temp_update")
-                subdirs = list(extract_dir.iterdir())
-                if subdirs:
-                    source_dir = subdirs[0]
+                # Download the new EXE
+                exe_response = requests.get(download_url)
+                if exe_response.status_code == 200:
+                    # Save to temporary file
+                    temp_dir = tempfile.gettempdir()
+                    new_exe_path = os.path.join(temp_dir, "MyApp_updated.exe")
                     
-                    # Copy files to current directory (except updater itself)
-                    for item in source_dir.iterdir():
-                        if item.name != "updater.py":
-                            if item.is_dir():
-                                if Path(item.name).exists():
-                                    shutil.rmtree(item.name)
-                                shutil.copytree(item, item.name)
-                            else:
-                                shutil.copy2(item, item.name)
-                
-                # Cleanup
-                shutil.rmtree("temp_update")
-                os.remove("zip_path")
-                
-                # Restart the application
-                print("Update complete! Restarting...")
-                subprocess.Popen([sys.executable, "main.py"])
-                
+                    with open(new_exe_path, 'wb') as f:
+                        f.write(exe_response.content)
+                    
+                    print("Update downloaded! Preparing to restart...")
+                    
+                    # Get current executable path
+                    current_exe = sys.executable
+                    
+                    # Create a batch file to replace the EXE
+                    batch_content = f"""
+@echo off
+echo Updating application...
+timeout /t 3 /nobreak >nul
+taskkill /f /im "{os.path.basename(current_exe)}" 2>nul
+del "{current_exe}" 2>nul
+move "{new_exe_path}" "{current_exe}" 2>nul
+echo Launching updated application...
+start "" "{current_exe}"
+del "%~f0"
+"""
+                    batch_path = os.path.join(temp_dir, "update_script.bat")
+                    with open(batch_path, 'w') as f:
+                        f.write(batch_content)
+                    
+                    # Run the batch file
+                    subprocess.Popen([batch_path], shell=True)
+                    sys.exit(0)
+                else:
+                    print("Failed to download update")
             else:
-                print("Failed to download update")
+                print("No EXE found in release assets")
         else:
             print("Failed to get release info")
             
     except Exception as e:
         print(f"Update error: {e}")
-        input("Press Enter to close...")
+    
+    input("Press Enter to close...")
 
 if __name__ == "__main__":
     main()
