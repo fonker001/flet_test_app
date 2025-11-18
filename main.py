@@ -12,7 +12,7 @@ def main(page: ft.Page):
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     
     # Version info (should match your GitHub release tag)
-    current_version = "1.0.0"
+    current_version = "1.0.6"
     
     def check_for_updates(e):
         try:
@@ -30,7 +30,7 @@ def main(page: ft.Page):
                 
                 if latest_version != current_version:
                     update_button.text = f"Update Available: {latest_version}"
-                    update_button.bgcolor = "green"
+                    update_button.bgcolor = ft.Colors.GREEN
                     update_button.disabled = False
                     page.snack_bar = ft.SnackBar(ft.Text(f"Update {latest_version} available!"))
                     page.snack_bar.open = True
@@ -88,7 +88,7 @@ def main(page: ft.Page):
         ft.Column([
             ft.Icon(ft.Icons.UPDATE, size=50),
             version_text,
-            ft.Text("This app can update itself from GitHub and anywhere", size=16),
+            ft.Text("This app can update itself from GitHub and anywhere in the world", size=16),
             update_button
         ], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER)
     )
